@@ -558,9 +558,9 @@ class Net_IMAPProtocol
         case 'LOGIN':
             $result = $this->_authLOGIN($uid, $pwd, $cmdid);
             break;
-		case 'XOAUTH2': //databird adding XOAUTH2
+	case 'XOAUTH2': //databird adding XOAUTH2
             $result = $this->_authOAUTH($uid, $pwd, $cmdid);
-            break;	
+            break;
         default:
             $result = new PEAR_Error($method 
                                      . ' is not a supported authentication'
@@ -740,39 +740,39 @@ class Net_IMAPProtocol
      */
     function _authOAUTH($uid, $pwd, $cmdid)
     {
-		try {
-			$auth = explode('|', $uid);
-		} catch (Exception $ex) {
-			return;
-		}
-		$username = $auth[0];
-		$tenant = $auth[1];
-		$client_id = $auth[2];
-		
-		$authUri = 'https://login.microsoftonline.com/' . $tenant . '/oauth2/v2.0/token';
-		$scope='https://outlook.office.com/.default';
-		$param_post_curl = [ 
-			'client_id' => $client_id,
-			'client_secret' => $pwd,
-			'scope' => $scope,
-			'grant_type' => 'client_credentials'
-		];
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $authUri);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($param_post_curl));
-		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		$oResult = curl_exec($ch);
-		$json = json_decode($oResult, true);
-		// Get token
-		$token = '';
-		if (isset($json['access_token']) && $json['access_token'] != '') {
-			$token = $json['access_token'];
-		}
-		
-		$error = $this->_putCMD($cmdid,
-                                                  'AUTHENTICATE',
-                                                  'XOAUTH2');
+	try {
+		$auth = explode('|', $uid);
+	} catch (Exception $ex) {
+		return new PEAR_Error('Username must be in format [email|tenantId|clientId]');
+	}
+	$username = $auth[0];
+	$tenant = $auth[1];
+	$client_id = $auth[2];
+	
+	$authUri = 'https://login.microsoftonline.com/' . $tenant . '/oauth2/v2.0/token';
+	$scope = 'https://outlook.office.com/.default';
+	$param_post_curl = [ 
+		'client_id' => $client_id,
+		'client_secret' => $pwd,
+		'scope' => $scope,
+		'grant_type' => 'client_credentials'
+	];
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $authUri);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($param_post_curl));
+	curl_setopt($ch, CURLOPT_POST, 1);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	$oResult = curl_exec($ch);
+	$json = json_decode($oResult, true);
+	// Get token
+	$token = '';
+	if (isset($json['access_token']) && $json['access_token'] != '') {
+		$token = $json['access_token'];
+	}
+	
+	$error = $this->_putCMD($cmdid,
+					  'AUTHENTICATE',
+					  'XOAUTH2');
         if ($error instanceOf PEAR_Error) {
             return $error;
         }
@@ -781,15 +781,8 @@ class Net_IMAPProtocol
         if ($args instanceOf PEAR_Error) {
             return $args;
         }
-
-        $this->_getNextToken($args, $plus);
-        $this->_getNextToken($args, $space);
-        $this->_getNextToken($args, $challenge);
-
-        $challenge = base64_decode($challenge);
-        $cram      = &Auth_SASL::factory('crammd5');
+	
         $auth_str  = base64_encode("user=$username\1auth=Bearer $token\1\1");
-
         $error = $this->_send($auth_str . "\r\n");
         if ($error instanceOf PEAR_Error) {
             return $error;
