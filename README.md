@@ -2,6 +2,13 @@
 
 To enable XOAUTH2 (ie for O365), you can replace file "IMAPProtocol.php" in folder "/plugins/EmailReporting/core_pear/Net" by the one available in this repository
 
+Modifications done:
+```
+Line 41: adding "XOAUTH2" method
+Line 561: adding "XOAUTH2" switch case
+Line 729-797: function to authenticate with OAUTH on O365
+```
+
 To obtain your tenantId & clientId, you can follow _(dont have a look on PHP sections)_ :
   https://vielhuber.de/en/blog/access-with-php-to-exchange-office-365/
   
